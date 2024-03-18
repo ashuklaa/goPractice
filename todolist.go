@@ -47,13 +47,13 @@ func addItem(cwd string, items string) {
 
 	file, err := os.OpenFile(todoFP, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
-		fmt.Println("Error opening file: %v\n", err)
+		fmt.Printf("Error opening file: %v\n", err)
 	}
 	defer file.Close()
 
 	_, err = file.WriteString(items + "\n")
 	if err != nil {
-		fmt.Println("Error adding item to file todo.md: %v", err)
+		fmt.Printf("Error adding item to file todo.md: %v", err)
 	} else {
 		fmt.Println("Item added successfully")
 	}
@@ -64,8 +64,9 @@ func listItems(cwd string) {
 	todoFP := filepath.Join(cwd, "todo.md")
 	file, err := os.Open(todoFP)
 	if err != nil {
-		fmt.Println("Error opening todo file: %v", err)
+		fmt.Printf("Error opening todo file: %v", err)
 	}
+	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
 
@@ -76,24 +77,30 @@ func listItems(cwd string) {
 }
 
 // TODO: Todo Help
-func todoHelp() string {
-
+func todoHelp() {
+	fmt.Println("Welcome to Todo Help")
+	fmt.Println("Actions: ")
+	fmt.Println("\t Add Item: todo add <item>")
+	fmt.Println("\t List all items: todo list")
+	fmt.Println("\t Check item status: todo status <unique item string>")
+	fmt.Println("\t Mark item completed: todo done <unique item string>")
 }
 
 // TODO: Item Status
 
-func checkStatus(cwd string, itemID string) string {
+func checkStatus(cwd string, itemID string) {
 	todoFP := filepath.Join(cwd, "todo.md")
 	file, err := os.Open(todoFP)
 	if err != nil {
-		fmt.Println("Error loading todo file, %v", err)
+		fmt.Printf("Error loading todo file, %v", err)
 	}
+	defer file.Close()
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
-		todoItem := scanner.Text().ToString()
-		if todoItem.HasPrefix(itemID) {
-
+		todoItem := scanner.Text()
+		if strings.HasPrefix(todoItem, itemID) {
+			fmt.Println(todoItem)
 		}
 	}
 
@@ -101,6 +108,32 @@ func checkStatus(cwd string, itemID string) string {
 
 // TODO: Mark Completed
 func markCompleted(cwd string, itemID string) {
+	todoFP := filepath.Join(cwd, "todo.md")
+	file, err := os.OpenFile(todoFP, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		fmt.Printf("Error loading todo file, %v", err)
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	tempStr := ""
+
+	for scanner.Scan() {
+		todoItem := scanner.Text()
+		if strings.HasPrefix(todoItem, itemID) {
+			tempStr += "[DONE]: " + todoItem
+
+		} else {
+			tempStr += todoItem
+
+		}
+	}
+	_, err = file.WriteString(tempStr)
+
+	if err != nil {
+		fmt.Printf("Error marking as done: %v", err)
+	} else {
+		fmt.Println("Item marked successfully")
+	}
 
 }
 func main() {
